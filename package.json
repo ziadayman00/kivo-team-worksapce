@@ -16,16 +16,26 @@
   "scripts": {
     "build": "pnpm --recursive run build",
     "dev": "pnpm --parallel run dev",
-    "lint": "pnpm --recursive run lint",
+    "lint": "eslint \"apps/**/src/**/*.{ts,tsx}\" \"packages/**/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write .",
+    "check:boundaries": "depcruise --validate .dependency-cruiser.js apps/api/src apps/web/src packages/api-client/src",
+    "test:boundaries": "node scripts/test-architecture-boundaries.mjs",
     "test": "pnpm --recursive run test",
     "typecheck": "pnpm --recursive run typecheck",
+    "audit:deps": "pnpm audit --audit-level=high",
     "db:generate": "pnpm --filter @kivo/api db:generate",
     "db:migrate": "pnpm --filter @kivo/api db:migrate",
     "db:reset": "pnpm --filter @kivo/api db:reset",
     "db:seed": "pnpm --filter @kivo/api db:seed"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "dependency-cruiser": "^18.7.2",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.72.1"
   }
 }

@@ -8,7 +8,7 @@ export class AppService {
   constructor(@Inject(DATABASE_CONNECTION) private readonly db: Database) {}
 
   async getHealth() {
-    let dbStatus = 'disconnected';
+    let dbStatus: 'connected' | 'error';
     try {
       await this.db.execute(sql`SELECT 1 as alive`);
       dbStatus = 'connected';

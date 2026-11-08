@@ -18,7 +18,9 @@ export const systemMetadata = pgTable('system_metadata', {
  * Core tenant boundary entity.
  */
 export const workspaces = pgTable('workspaces', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   status: text('status').notNull().default('ACTIVE'),

@@ -7,13 +7,20 @@ on:
     branches: [main]
 
 jobs:
-  verify:
-    name: Build, Typecheck & Test
+  security-and-quality:
+    name: Code Quality & Architecture Boundaries
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret Scanning (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -29,11 +36,26 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dependency Security Audit
+        run: pnpm run audit:deps
+
+      - name: Check Code Formatting (Prettier)
+        run: pnpm run format:check
+
+      - name: Lint Code (ESLint)
+        run: pnpm run lint
+
+      - name: Check Architecture Boundaries (dependency-cruiser)
+        run: pnpm run check:boundaries
+
+      - name: Verify Architecture Boundary Rejection (Fixtures)
+        run: pnpm run test:boundaries
+
       - name: Typecheck
-        run: pnpm --recursive run typecheck
+        run: pnpm run typecheck
 
       - name: Build
-        run: pnpm --recursive run build
+        run: pnpm run build
 
       - name: Run Web Tests
         run: pnpm --filter @kivo/web test
