@@ -7,9 +7,29 @@ on:
     branches: [main]
 
 jobs:
-  security-and-quality:
-    name: Code Quality & Architecture Boundaries
+  verify:
+    name: Code Quality, Security & Architecture Gates
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: kivo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://postgres:password@localhost:5432/kivo_test
+      DATABASE_URL_TEST: postgresql://postgres:password@localhost:5432/kivo_test
+      PORT: 3000
 
     steps:
       - name: Checkout repository
@@ -36,6 +56,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Dependency Security Audit
         run: pnpm run audit:deps
 
@@ -57,8 +80,14 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Run Web Tests
+      - name: Run Web Unit Tests
         run: pnpm --filter @kivo/web test
 
       - name: Run API Unit Tests
         run: pnpm --filter @kivo/api test
+
+      - name: Run PostgreSQL Integration Tests
+        run: pnpm run test:integration
+
+      - name: Run Playwright E2E Smoke Tests
+        run: pnpm run test:e2e
