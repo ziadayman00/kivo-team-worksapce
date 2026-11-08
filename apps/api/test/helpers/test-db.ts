@@ -41,8 +41,7 @@ export async function migrateTestDatabase(): Promise<void> {
 export async function cleanTestDatabase(): Promise<void> {
   const db = getTestDb();
   // Clean all application tables in safe foreign-key order
-  await db.execute(sql`TRUNCATE TABLE workspaces CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE system_metadata CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE accounts, workspaces, system_metadata CASCADE`);
 }
 
 export async function closeTestDatabase(): Promise<void> {
