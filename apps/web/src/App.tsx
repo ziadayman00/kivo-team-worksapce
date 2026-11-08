@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CreateWorkspacePage } from './pages/CreateWorkspacePage';
 import { WorkspaceViewPage } from './pages/WorkspaceViewPage';
 import { AcceptInvitationPage } from './pages/AcceptInvitationPage';
+import { LandingPage } from './pages/LandingPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,12 +32,17 @@ export function App() {
               <Route path="/register" element={<RegisterPage />} />
             </Route>
 
+            {/* Public Marketing & Landing Pages (Neon, Vercel & Supabase inspired) */}
+            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/welcome" element={<LandingPage />} />
+
             {/* Invitation route accessible by both authenticated and unauthenticated visitors */}
             <Route path="/invite/:token" element={<AcceptInvitationPage />} />
 
-            {/* Protected routes (redirect to login if unauthenticated) */}
+            {/* Protected application routes (redirect to login if unauthenticated) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/create-workspace" element={<CreateWorkspacePage />} />
               <Route path="/workspaces/:workspaceSlug" element={<WorkspaceViewPage />} />
             </Route>
