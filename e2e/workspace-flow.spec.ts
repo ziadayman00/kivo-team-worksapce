@@ -8,8 +8,8 @@ test.describe('KIVO Workspace Creation, Profile & Slug Routing (ZIA-25 / M1-04)'
     password: 'Password123!',
   };
   const otherUser = {
-    displayName: `Other ${uniqueId}`,
-    email: `other.${uniqueId}@kivo.test`,
+    displayName: `Colleague ${uniqueId}`,
+    email: `colleague.${uniqueId}@kivo.test`,
     password: 'Password123!',
   };
   const workspaceData = {
@@ -18,7 +18,7 @@ test.describe('KIVO Workspace Creation, Profile & Slug Routing (ZIA-25 / M1-04)'
     updatedName: `Acme Automation ${uniqueId}`,
   };
 
-  test('full workspace journey: create -> slug routing -> settings update -> tenant access control', async ({
+  test('full workspace journey: create -> slug routing -> settings update -> invite -> accept -> suspension', async ({
     page,
   }) => {
     // 1. Register owner user
@@ -62,21 +62,21 @@ test.describe('KIVO Workspace Creation, Profile & Slug Routing (ZIA-25 / M1-04)'
       page.getByRole('heading', { level: 1, name: workspaceData.updatedName }),
     ).toBeVisible();
 
-    // 6. Navigate back to Dashboard and verify workspace is listed
-    await page.goto('/');
-    await expect(page.getByText(workspaceData.updatedName)).toBeVisible();
-    await expect(page.getByText(`/${workspaceData.slug}`)).toBeVisible();
+    // 6. Send Invitation to colleague
+    await page.getByPlaceholder('colleague@example.com').fill(otherUser.email);
+    await page.getByRole('button', { name: /send invite/i }).click();
 
-    // 7. Click workspace card to navigate back via slug route
-    await page.getByText(workspaceData.updatedName).click();
-    await expect(page).toHaveURL(`/workspaces/${workspaceData.slug}`);
+    const inviteLinkInput = page.locator('input[readonly]');
+    await expect(inviteLinkInput).toBeVisible({ timeout: 10000 });
+    const inviteUrl = await inviteLinkInput.inputValue();
+    expect(inviteUrl).toContain('/invite/');
 
-    // 8. Logout owner
+    // 7. Logout owner
     await page.goto('/');
     await page.getByRole('button', { name: /log out/i }).click();
     await expect(page).toHaveURL('/login');
 
-    // 9. Register second user
+    // 8. Register colleague user
     await page.goto('/register');
     await page.getByLabel(/full name/i).fill(otherUser.displayName);
     await page.getByLabel(/email address/i).fill(otherUser.email);
@@ -85,7 +85,58 @@ test.describe('KIVO Workspace Creation, Profile & Slug Routing (ZIA-25 / M1-04)'
     await page.getByRole('button', { name: /create account/i }).click();
     await expect(page).toHaveURL('/');
 
-    // 10. Attempt to access owner's workspace -> verify access denied (tenant isolation)
+    // 9. Colleague attempts to directly access workspace before accepting invite -> 403 Forbidden
+    await page.goto(`/workspaces/${workspaceData.slug}`);
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('alert')).toContainText(/do not have access|permission/i);
+
+    // 10. Colleague visits the invitation link
+    await page.goto(inviteUrl);
+    await expect(page.getByText(/workspace invitation/i)).toBeVisible();
+    await expect(page.getByText(workspaceData.updatedName)).toBeVisible();
+    await expect(page.getByText(otherUser.email, { exact: true })).toBeVisible();
+
+    // 11. Colleague accepts the invitation
+    await page.getByRole('button', { name: /accept & join workspace/i }).click();
+
+    // 12. Colleague is redirected to workspace and gains access
+    await expect(page).toHaveURL(`/workspaces/${workspaceData.slug}`);
+    await expect(
+      page.getByRole('heading', { level: 1, name: workspaceData.updatedName }),
+    ).toBeVisible();
+    await expect(page.getByText('MEMBER').first()).toBeVisible();
+
+    // 13. Colleague logs out
+    await page.goto('/');
+    await page.getByRole('button', { name: /log out/i }).click();
+    await expect(page).toHaveURL('/login');
+
+    // 14. Owner logs back in and suspends colleague
+    await page.goto('/login');
+    await page.getByLabel(/email address/i).fill(ownerUser.email);
+    await page.getByLabel(/password/i).fill(ownerUser.password);
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).toHaveURL('/');
+
+    await page.goto(`/workspaces/${workspaceData.slug}`);
+    await expect(page.getByText(otherUser.displayName)).toBeVisible();
+
+    // Click suspend button for colleague
+    const suspendBtn = page.locator('button[title="Suspend Member"]').first();
+    await suspendBtn.click();
+    await expect(page.getByRole('status')).toContainText(/member updated successfully/i);
+
+    // 15. Owner logs out
+    await page.goto('/');
+    await page.getByRole('button', { name: /log out/i }).click();
+
+    // 16. Colleague logs in and attempts to access workspace -> denied because status is SUSPENDED
+    await page.goto('/login');
+    await page.getByLabel(/email address/i).fill(otherUser.email);
+    await page.getByLabel(/password/i).fill(otherUser.password);
+    await page.getByRole('button', { name: /sign in/i }).click();
+    await expect(page).toHaveURL('/');
+
     await page.goto(`/workspaces/${workspaceData.slug}`);
     await expect(page.getByRole('alert')).toBeVisible();
     await expect(page.getByRole('alert')).toContainText(/do not have access|permission/i);

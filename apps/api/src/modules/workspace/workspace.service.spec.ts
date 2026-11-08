@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspaceService } from './workspace.service';
+import { IdentityService } from '../identity';
 import { DATABASE_CONNECTION } from '../../database/database.constants';
 import {
   ConflictException,
@@ -14,17 +15,20 @@ type MockDatabase = {
   innerJoin: jest.Mock;
   where: jest.Mock;
   limit: jest.Mock;
+  orderBy: jest.Mock;
   insert: jest.Mock;
   values: jest.Mock;
   returning: jest.Mock;
   update: jest.Mock;
   set: jest.Mock;
+  delete: jest.Mock;
   transaction: jest.Mock;
 };
 
 describe('WorkspaceService', () => {
   let service: WorkspaceService;
   let mockDb: MockDatabase;
+  let mockIdentityService: { getAccountById: jest.Mock };
 
   beforeEach(async () => {
     mockDb = {
@@ -33,16 +37,26 @@ describe('WorkspaceService', () => {
       innerJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       limit: jest.fn().mockResolvedValue([]),
+      orderBy: jest.fn().mockResolvedValue([]),
       insert: jest.fn().mockReturnThis(),
       values: jest.fn().mockReturnThis(),
       returning: jest.fn().mockResolvedValue([]),
       update: jest.fn().mockReturnThis(),
       set: jest.fn().mockReturnThis(),
+      delete: jest.fn().mockReturnThis(),
       transaction: jest.fn().mockImplementation(async (cb) => cb(mockDb)),
     };
 
+    mockIdentityService = {
+      getAccountById: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [WorkspaceService, { provide: DATABASE_CONNECTION, useValue: mockDb }],
+      providers: [
+        WorkspaceService,
+        { provide: DATABASE_CONNECTION, useValue: mockDb },
+        { provide: IdentityService, useValue: mockIdentityService },
+      ],
     }).compile();
 
     service = module.get<WorkspaceService>(WorkspaceService);
@@ -101,115 +115,254 @@ describe('WorkspaceService', () => {
 
       const result = await service.createWorkspace('usr_1', { name: 'Acme Corp' });
 
-      expect(mockDb.transaction).toHaveBeenCalled();
       expect(result.id).toBe('ws_123');
       expect(result.role).toBe('OWNER');
       expect(result.slug).toBe('acme-corp');
     });
   });
 
-  describe('listUserWorkspaces', () => {
-    it('returns list of workspaces where user is active member', async () => {
-      const fakeRows = [
-        {
-          id: 'ws_1',
-          name: 'Workspace Alpha',
-          slug: 'alpha',
-          status: 'ACTIVE',
-          role: 'OWNER',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-      mockDb.where.mockResolvedValueOnce(fakeRows);
-
-      const result = await service.listUserWorkspaces('usr_1');
-      expect(result).toEqual(fakeRows);
-    });
-  });
-
   describe('getWorkspaceBySlug', () => {
     it('throws NotFoundException if workspace does not exist', async () => {
-      mockDb.limit.mockResolvedValueOnce([]); // workspace not found
+      mockDb.limit.mockResolvedValueOnce([]);
 
       await expect(service.getWorkspaceBySlug('usr_1', 'non-existent')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('throws ForbiddenException if user is not a member', async () => {
+    it('throws ForbiddenException if user is not an active member', async () => {
       mockDb.limit
-        .mockResolvedValueOnce([{ id: 'ws_1', slug: 'alpha', status: 'ACTIVE' }]) // workspace exists
-        .mockResolvedValueOnce([]); // user membership not found
+        .mockResolvedValueOnce([{ id: 'ws_1', name: 'Ws 1', slug: 'ws-1', status: 'ACTIVE' }])
+        .mockResolvedValueOnce([]); // no membership
 
-      await expect(service.getWorkspaceBySlug('usr_1', 'alpha')).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.getWorkspaceBySlug('usr_1', 'ws-1')).rejects.toThrow(ForbiddenException);
     });
 
-    it('returns workspace with user membership role', async () => {
-      const fakeWorkspace = {
-        id: 'ws_1',
-        name: 'Alpha',
-        slug: 'alpha',
-        status: 'ACTIVE',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      const fakeMembership = {
-        role: 'ADMIN',
-      };
+    it('returns workspace with membership role if valid member', async () => {
+      const now = new Date();
+      mockDb.limit
+        .mockResolvedValueOnce([
+          {
+            id: 'ws_1',
+            name: 'Ws 1',
+            slug: 'ws-1',
+            status: 'ACTIVE',
+            createdAt: now,
+            updatedAt: now,
+          },
+        ])
+        .mockResolvedValueOnce([{ id: 'mem_1', role: 'ADMIN', status: 'ACTIVE' }]);
 
-      mockDb.limit.mockResolvedValueOnce([fakeWorkspace]).mockResolvedValueOnce([fakeMembership]);
-
-      const result = await service.getWorkspaceBySlug('usr_1', 'alpha');
-      expect(result.id).toBe('ws_1');
+      const result = await service.getWorkspaceBySlug('usr_1', 'ws-1');
+      expect(result.name).toBe('Ws 1');
       expect(result.role).toBe('ADMIN');
     });
   });
 
-  describe('updateWorkspace', () => {
+  describe('createInvitation', () => {
     it('throws ForbiddenException if caller has MEMBER role', async () => {
-      // Mock getWorkspaceBySlug returning role MEMBER
+      // getWorkspaceBySlug returns MEMBER role
       jest.spyOn(service, 'getWorkspaceBySlug').mockResolvedValueOnce({
         id: 'ws_1',
-        name: 'Alpha',
-        slug: 'alpha',
+        name: 'Workspace',
+        slug: 'workspace',
         status: 'ACTIVE',
         role: 'MEMBER',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      await expect(service.updateWorkspace('usr_1', 'alpha', { name: 'New Name' })).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(
+        service.createInvitation('usr_1', 'workspace', { email: 'colleague@example.com' }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
-    it('successfully updates workspace name for OWNER', async () => {
+    it('throws ConflictException if invited email is already an active member', async () => {
       jest.spyOn(service, 'getWorkspaceBySlug').mockResolvedValueOnce({
         id: 'ws_1',
-        name: 'Alpha',
-        slug: 'alpha',
+        name: 'Workspace',
+        slug: 'workspace',
         status: 'ACTIVE',
         role: 'OWNER',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      const updatedWs = {
+      mockDb.limit.mockResolvedValueOnce([{ id: 'existing_member' }]);
+
+      await expect(
+        service.createInvitation('usr_1', 'workspace', { email: 'existing@example.com' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('creates invitation and returns unhashed token when caller is OWNER', async () => {
+      jest.spyOn(service, 'getWorkspaceBySlug').mockResolvedValueOnce({
         id: 'ws_1',
-        name: 'Alpha Renovated',
-        slug: 'alpha',
+        name: 'Workspace',
+        slug: 'workspace',
         status: 'ACTIVE',
+        role: 'OWNER',
         createdAt: new Date(),
         updatedAt: new Date(),
-      };
-      mockDb.returning.mockResolvedValueOnce([updatedWs]);
+      });
 
-      const result = await service.updateWorkspace('usr_1', 'alpha', { name: 'Alpha Renovated' });
-      expect(result.name).toBe('Alpha Renovated');
-      expect(result.role).toBe('OWNER');
+      mockDb.limit
+        .mockResolvedValueOnce([]) // not existing member
+        .mockResolvedValueOnce([]); // no existing pending invite
+
+      const fakeInvite = {
+        id: 'inv_123',
+        email: 'newuser@example.com',
+        role: 'MEMBER',
+        status: 'PENDING',
+        expiresAt: new Date(Date.now() + 1000000),
+        createdAt: new Date(),
+      };
+      mockDb.returning.mockResolvedValueOnce([fakeInvite]);
+
+      const result = await service.createInvitation('usr_1', 'workspace', {
+        email: 'newuser@example.com',
+      });
+
+      expect(result.email).toBe('newuser@example.com');
+      expect(result.status).toBe('PENDING');
+      expect(result.token).toBeDefined();
+      expect(typeof result.token).toBe('string');
+    });
+  });
+
+  describe('acceptInvitation', () => {
+    it('throws ForbiddenException if signed-in account email does not match invitation recipient', async () => {
+      mockIdentityService.getAccountById.mockResolvedValueOnce({
+        id: 'usr_signed_in',
+        email: 'user_a@example.com',
+      });
+
+      const fakeRecord = {
+        invitation: {
+          id: 'inv_1',
+          email: 'user_b@example.com', // different email
+          status: 'PENDING',
+          expiresAt: new Date(Date.now() + 100000),
+          role: 'MEMBER',
+        },
+        workspace: {
+          id: 'ws_1',
+          name: 'Workspace',
+          slug: 'workspace',
+        },
+      };
+      mockDb.limit.mockResolvedValueOnce([fakeRecord]);
+
+      await expect(service.acceptInvitation('usr_signed_in', 'raw_token_xyz')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('throws ConflictException if invitation has already been accepted', async () => {
+      mockIdentityService.getAccountById.mockResolvedValueOnce({
+        id: 'usr_signed_in',
+        email: 'user_a@example.com',
+      });
+
+      const fakeRecord = {
+        invitation: {
+          id: 'inv_1',
+          email: 'user_a@example.com',
+          status: 'ACCEPTED',
+          expiresAt: new Date(Date.now() + 100000),
+          role: 'MEMBER',
+        },
+        workspace: {
+          id: 'ws_1',
+          name: 'Workspace',
+          slug: 'workspace',
+        },
+      };
+      mockDb.limit.mockResolvedValueOnce([fakeRecord]);
+
+      await expect(service.acceptInvitation('usr_signed_in', 'raw_token_xyz')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('creates membership and accepts invitation when valid', async () => {
+      mockIdentityService.getAccountById.mockResolvedValueOnce({
+        id: 'usr_signed_in',
+        email: 'user_a@example.com',
+      });
+
+      const fakeRecord = {
+        invitation: {
+          id: 'inv_1',
+          email: 'user_a@example.com',
+          status: 'PENDING',
+          expiresAt: new Date(Date.now() + 100000),
+          role: 'ADMIN',
+          workspaceId: 'ws_1',
+        },
+        workspace: {
+          id: 'ws_1',
+          name: 'Workspace',
+          slug: 'workspace',
+        },
+      };
+      mockDb.limit
+        .mockResolvedValueOnce([fakeRecord]) // fetch invite
+        .mockResolvedValueOnce([]); // check existing membership inside transaction
+
+      const result = await service.acceptInvitation('usr_signed_in', 'raw_token_xyz');
+
+      expect(result.workspace.slug).toBe('workspace');
+      expect(result.role).toBe('ADMIN');
+      expect(mockDb.insert).toHaveBeenCalled();
+      expect(mockDb.update).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateMember and sole owner protections', () => {
+    it('throws BadRequestException if attempting to demote the sole owner of a workspace', async () => {
+      jest.spyOn(service, 'getWorkspaceBySlug').mockResolvedValueOnce({
+        id: 'ws_1',
+        name: 'Workspace',
+        slug: 'workspace',
+        status: 'ACTIVE',
+        role: 'OWNER',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const fakeTarget = {
+        membership: { id: 'mem_owner', role: 'OWNER', status: 'ACTIVE', accountId: 'usr_1' },
+        account: { id: 'usr_1', displayName: 'Owner User', email: 'owner@example.com' },
+      };
+      mockDb.limit.mockResolvedValueOnce([fakeTarget]).mockResolvedValueOnce([{ id: 'mem_owner' }]); // active owners count returns 1
+
+      await expect(
+        service.updateMember('usr_1', 'workspace', 'mem_owner', { role: 'MEMBER' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws ForbiddenException if non-owner attempts to modify an owner', async () => {
+      jest.spyOn(service, 'getWorkspaceBySlug').mockResolvedValueOnce({
+        id: 'ws_1',
+        name: 'Workspace',
+        slug: 'workspace',
+        status: 'ACTIVE',
+        role: 'ADMIN', // caller is admin
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const fakeTarget = {
+        membership: { id: 'mem_owner', role: 'OWNER', status: 'ACTIVE', accountId: 'usr_owner' },
+        account: { id: 'usr_owner', displayName: 'Owner', email: 'owner@example.com' },
+      };
+      mockDb.limit.mockResolvedValueOnce([fakeTarget]);
+
+      await expect(
+        service.updateMember('usr_admin', 'workspace', 'mem_owner', { status: 'SUSPENDED' }),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });

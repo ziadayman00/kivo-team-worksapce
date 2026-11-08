@@ -298,4 +298,151 @@ describe('PostgreSQL Integration: Workspace Creation & Profile Management (ZIA-2
       expect(res.body.message).toContain('Only workspace owners and administrators');
     });
   });
+
+  describe('Invitations & Membership Lifecycle (ZIA-25)', () => {
+    let workspaceId: string;
+    let inviteToken: string;
+
+    beforeEach(async () => {
+      const ws = await request(app.getHttpServer())
+        .post('/api/v1/workspaces')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ name: 'Avengers HQ', slug: 'avengers-hq' })
+        .expect(201);
+      workspaceId = ws.body.data.workspace.id;
+
+      // User A invites User B (user-b@kivo.test)
+      const invRes = await request(app.getHttpServer())
+        .post('/api/v1/workspaces/avengers-hq/invitations')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ email: 'user-b@kivo.test', role: 'MEMBER' })
+        .expect(201);
+
+      inviteToken = invRes.body.data.invitation.token;
+      expect(inviteToken).toBeDefined();
+    });
+
+    it('stores token securely hashed (SHA-256) in PostgreSQL', async () => {
+      const [inv] = await db
+        .select()
+        .from(schema.workspaceInvitations)
+        .where(eq(schema.workspaceInvitations.workspaceId, workspaceId))
+        .limit(1);
+
+      expect(inv).toBeDefined();
+      expect(inv?.email).toBe('user-b@kivo.test');
+      expect(inv?.status).toBe('PENDING');
+      // Token stored is not the raw token
+      expect(inv?.tokenHash).not.toBe(inviteToken);
+      expect(inv?.tokenHash).toHaveLength(64); // SHA-256 hex string
+    });
+
+    it('allows public resolution of invitation details by token', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/v1/invitations/${inviteToken}`)
+        .expect(200);
+
+      expect(res.body.status).toBe('success');
+      expect(res.body.data.invitation.email).toBe('user-b@kivo.test');
+      expect(res.body.data.invitation.workspace.slug).toBe('avengers-hq');
+    });
+
+    it('rejects acceptance if signed in with mismatched email (Identity Binding)', async () => {
+      // User A (user-a@kivo.test) attempts to accept invite meant for user-b@kivo.test
+      const res = await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${inviteToken}/accept`)
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(403);
+
+      expect(res.body.message).toContain('This invitation was issued to');
+    });
+
+    it('allows invited recipient to accept and grants workspace access', async () => {
+      // User B accepts
+      const acceptRes = await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${inviteToken}/accept`)
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      expect(acceptRes.body.status).toBe('success');
+      expect(acceptRes.body.data.workspace.slug).toBe('avengers-hq');
+
+      // Verify User B can now access avengers-hq
+      const wsRes = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/avengers-hq')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      expect(wsRes.body.data.workspace.role).toBe('MEMBER');
+
+      // Verify single-use token: replay attempt rejected
+      await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${inviteToken}/accept`)
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(409);
+    });
+
+    it('suspending a member immediately revokes their workspace access', async () => {
+      // User B accepts invite
+      await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${inviteToken}/accept`)
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      // List members to find User B's membership ID
+      const membersRes = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/avengers-hq/members')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(200);
+
+      const memberB = membersRes.body.data.members.find(
+        (m: { email: string }) => m.email === 'user-b@kivo.test',
+      );
+      expect(memberB).toBeDefined();
+
+      // Owner suspends User B
+      await request(app.getHttpServer())
+        .patch(`/api/v1/workspaces/avengers-hq/members/${memberB.id}`)
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ status: 'SUSPENDED' })
+        .expect(200);
+
+      // Subsequent access by User B is blocked with 403 Forbidden
+      const blockedRes = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/avengers-hq')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(403);
+
+      expect(blockedRes.body.message).toContain('do not have access');
+    });
+
+    it('removing a member deletes membership and denies subsequent access', async () => {
+      // User B accepts invite
+      await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${inviteToken}/accept`)
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      const membersRes = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/avengers-hq/members')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(200);
+
+      const memberB = membersRes.body.data.members.find(
+        (m: { email: string }) => m.email === 'user-b@kivo.test',
+      );
+
+      // Owner removes User B
+      await request(app.getHttpServer())
+        .delete(`/api/v1/workspaces/avengers-hq/members/${memberB.id}`)
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(200);
+
+      // User B denied
+      await request(app.getHttpServer())
+        .get('/api/v1/workspaces/avengers-hq')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(403);
+    });
+  });
 });

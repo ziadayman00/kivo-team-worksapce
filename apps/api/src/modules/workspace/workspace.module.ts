@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WorkspaceService } from './workspace.service';
 import { WorkspaceController } from './workspace.controller';
+import { InvitationController } from './invitation.controller';
 import { IdentityModule } from '../identity';
 
 /**
@@ -10,7 +11,7 @@ import { IdentityModule } from '../identity';
  */
 @Module({
   imports: [IdentityModule],
-  controllers: [WorkspaceController],
+  controllers: [WorkspaceController, InvitationController],
   providers: [WorkspaceService],
   exports: [WorkspaceService],
 })

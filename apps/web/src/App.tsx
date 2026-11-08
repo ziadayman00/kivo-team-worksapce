@@ -8,6 +8,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CreateWorkspacePage } from './pages/CreateWorkspacePage';
 import { WorkspaceViewPage } from './pages/WorkspaceViewPage';
+import { AcceptInvitationPage } from './pages/AcceptInvitationPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,9 @@ export function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
             </Route>
+
+            {/* Invitation route accessible by both authenticated and unauthenticated visitors */}
+            <Route path="/invite/:token" element={<AcceptInvitationPage />} />
 
             {/* Protected routes (redirect to login if unauthenticated) */}
             <Route element={<ProtectedRoute />}>

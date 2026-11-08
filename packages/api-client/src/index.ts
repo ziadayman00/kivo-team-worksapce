@@ -55,6 +55,50 @@ export interface UpdateWorkspaceInput {
   name?: string;
 }
 
+export interface WorkspaceInvitationDto {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  expiresAt: string;
+  token?: string;
+  createdAt: string;
+}
+
+export interface InvitationDetailsDto {
+  id: string;
+  email: string;
+  role: string;
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  expiresAt: string;
+}
+
+export interface WorkspaceMemberDto {
+  id: string;
+  accountId: string;
+  displayName: string;
+  email: string;
+  avatarUrl: string | null;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateInvitationInput {
+  email: string;
+  role?: 'ADMIN' | 'MEMBER';
+}
+
+export interface UpdateMemberInput {
+  role?: 'ADMIN' | 'MEMBER';
+  status?: 'ACTIVE' | 'SUSPENDED';
+}
+
 export interface ApiResponse<T = unknown> {
   status: 'success' | 'error';
   data?: T;
@@ -153,6 +197,68 @@ export function createApiClient(config: ApiClientConfig = {}) {
             body: JSON.stringify(input),
           },
         ),
+      createInvitation: (slug: string, input: CreateInvitationInput) =>
+        request<ApiResponse<{ invitation: WorkspaceInvitationDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/invitations`,
+          {
+            method: 'POST',
+            body: JSON.stringify(input),
+          },
+        ),
+      listInvitations: (slug: string) =>
+        request<ApiResponse<{ invitations: WorkspaceInvitationDto[] }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/invitations`,
+          {
+            method: 'GET',
+          },
+        ),
+      revokeInvitation: (slug: string, invitationId: string) =>
+        request<ApiResponse<{ invitation: WorkspaceInvitationDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/invitations/${encodeURIComponent(invitationId)}/revoke`,
+          {
+            method: 'POST',
+          },
+        ),
+      listMembers: (slug: string) =>
+        request<ApiResponse<{ members: WorkspaceMemberDto[] }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/members`,
+          {
+            method: 'GET',
+          },
+        ),
+      updateMember: (slug: string, memberId: string, input: UpdateMemberInput) =>
+        request<ApiResponse<{ member: WorkspaceMemberDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}`,
+          {
+            method: 'PATCH',
+            body: JSON.stringify(input),
+          },
+        ),
+      removeMember: (slug: string, memberId: string) =>
+        request<ApiResponse<{ success: boolean; removedMemberId: string }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/members/${encodeURIComponent(memberId)}`,
+          {
+            method: 'DELETE',
+          },
+        ),
+    },
+    invitations: {
+      getByToken: (token: string) =>
+        request<ApiResponse<{ invitation: InvitationDetailsDto }>>(
+          `/api/v1/invitations/${encodeURIComponent(token)}`,
+          {
+            method: 'GET',
+          },
+        ),
+      accept: (token: string) =>
+        request<
+          ApiResponse<{
+            workspace: { id: string; name: string; slug: string };
+            role: string;
+          }>
+        >(`/api/v1/invitations/${encodeURIComponent(token)}/accept`, {
+          method: 'POST',
+        }),
     },
   };
 }
