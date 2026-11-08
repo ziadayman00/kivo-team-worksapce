@@ -1,28 +1,38 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Terminal } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.08] bg-[#050507] text-zinc-400 text-xs">
+    <footer className="border-t border-white/[0.08] bg-[#050507] text-zinc-400 text-xs relative overflow-hidden">
       {/* Pre-footer Call to Action Banner */}
-      <div className="relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8 border-b border-white/[0.06] bg-gradient-to-b from-indigo-950/20 via-zinc-950 to-[#050507]">
-        <div className="pointer-events-none absolute left-1/2 bottom-0 -translate-x-1/2 h-64 w-[600px] rounded-full bg-indigo-500/10 blur-[100px]" />
+      <div className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8 border-b border-white/[0.06] bg-gradient-to-b from-emerald-950/20 via-zinc-950 to-[#050507]">
+        <div className="pointer-events-none absolute left-1/2 bottom-0 -translate-x-1/2 h-72 w-[700px] rounded-full bg-emerald-500/10 blur-[130px]" />
 
         <div className="relative mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Build the Future of Your Team Today.
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-mono text-emerald-400 mb-6">
+            <Terminal className="h-3.5 w-3.5" />
+            <span>OPEN FOR HIGH-VELOCITY ENGINEERING TEAMS</span>
+          </div>
+
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white leading-[1.1]">
+            Build on Provable Foundations.
+            <span className="block text-emerald-400 mt-2">
+              Deploy with Mathematical Confidence.
+            </span>
           </h2>
-          <p className="mt-4 text-sm text-zinc-400 max-w-xl mx-auto">
-            Experience what happens when issue planning, contextual discussions, and multi-tenant
-            governance work as one cohesive system.
+
+          <p className="mt-5 text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+            Eliminate cognitive fragmentation between issue trackers, chat rooms, and auth gates.
+            Experience the singular power of an operating system built on PostgreSQL 17
+            multi-tenancy.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-500 hover:scale-[1.02]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-7 py-3.5 text-xs font-bold text-black shadow-xl shadow-emerald-500/20 transition hover:bg-emerald-400 hover:scale-[1.02]"
             >
-              <span>Get Started Free</span>
+              <span>Initialize Workspace</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
 
@@ -30,7 +40,7 @@ export function Footer() {
               href="https://github.com/ziadayman00/kivo-team-worksapce"
               target="_blank"
               rel="noreferrer"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-zinc-900/80 px-6 py-3 text-xs font-semibold text-zinc-200 transition hover:bg-zinc-800 hover:text-white"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-white/[0.1] bg-zinc-900/80 px-7 py-3.5 text-xs font-bold text-zinc-200 transition hover:bg-zinc-800 hover:text-white"
             >
               <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
                 <path
@@ -46,43 +56,45 @@ export function Footer() {
       </div>
 
       {/* Main Footer Links */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white text-xs">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 font-bold text-black text-xs">
                 K
               </div>
-              <span className="text-sm font-bold tracking-tight text-white">KIVO</span>
+              <span className="text-sm font-bold tracking-tight text-white font-mono">
+                KIVO // OS
+              </span>
             </div>
             <p className="mt-3 text-xs text-zinc-500 max-w-xs leading-relaxed">
-              The high-craft team operating system connecting planning, discussions, and
-              multi-tenant governance into a unified workspace.
+              The high-craft team operating system connecting sprint velocity, contextual
+              discussions, and multi-tenant governance into a unified modular monolith.
             </p>
             <div className="mt-4 flex items-center gap-2 text-[11px] text-emerald-400 font-mono">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>All Systems Operational</span>
+              <span>All 8 Modules Fully Operational</span>
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider font-mono">
               Product
             </h4>
-            <ul className="mt-3 space-y-2 text-zinc-400">
+            <ul className="mt-3 space-y-2 text-zinc-400 font-mono text-xs">
               <li>
-                <a href="#features" className="hover:text-white transition">
-                  Sprint Cycles
+                <a href="#cycles" className="hover:text-white transition">
+                  01 / Cycles
                 </a>
               </li>
               <li>
-                <a href="#bento" className="hover:text-white transition">
-                  Contextual Threads
+                <a href="#threads" className="hover:text-white transition">
+                  02 / Threads
                 </a>
               </li>
               <li>
-                <a href="#demo" className="hover:text-white transition">
-                  Interactive Sandbox
+                <a href="#isolation" className="hover:text-white transition">
+                  03 / Multi-Tenancy
                 </a>
               </li>
               <li>
@@ -94,64 +106,89 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider font-mono">
               Architecture
             </h4>
-            <ul className="mt-3 space-y-2 text-zinc-400">
+            <ul className="mt-3 space-y-2 text-zinc-400 font-mono text-xs">
               <li>
-                <a href="#architecture" className="hover:text-white transition">
-                  Modular Monolith
+                <a href="#code-studio" className="hover:text-white transition">
+                  Code Studio
                 </a>
               </li>
               <li>
-                <span className="text-zinc-500">PostgreSQL 17 RLS</span>
+                <span className="text-zinc-500">ADR-001 (Monolith)</span>
               </li>
               <li>
-                <span className="text-zinc-500">Transactional Outbox</span>
+                <span className="text-zinc-500">ADR-003 (Tenancy)</span>
               </li>
               <li>
-                <span className="text-zinc-500">Argon2id + Opaque Sessions</span>
+                <span className="text-zinc-500">PostgreSQL 17 Native</span>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
-              Open Source
+            <h4 className="text-xs font-semibold text-zinc-200 uppercase tracking-wider font-mono">
+              Domain Modules
             </h4>
-            <ul className="mt-3 space-y-2 text-zinc-400">
+            <ul className="mt-3 space-y-2 text-zinc-400 font-mono text-xs">
               <li>
-                <a
-                  href="https://github.com/ziadayman00/kivo-team-worksapce"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-white transition"
-                >
-                  GitHub Repository
-                </a>
+                <span className="text-zinc-500">IdentityModule</span>
               </li>
               <li>
-                <Link to="/login" className="hover:text-white transition">
-                  Account Sign In
-                </Link>
+                <span className="text-zinc-500">WorkspaceModule</span>
               </li>
               <li>
-                <Link to="/register" className="hover:text-white transition">
-                  Create Workspace
-                </Link>
+                <span className="text-zinc-500">WorkManagement</span>
+              </li>
+              <li>
+                <span className="text-zinc-500">Notification (SSE)</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} KIVO Systems. Built with precision and care.</p>
+        {/* Spatial Wireframe Relief Horizon (Neon-Inspired 3D Perspective Grid) */}
+        <div className="mt-16 pt-8 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-[11px] text-zinc-500">
+          <div>
+            &copy; {new Date().getFullYear()} KIVO Systems Inc. All architectural rights reserved.
+          </div>
           <div className="flex items-center gap-4">
-            <span>Node.js 24 LTS Verified</span>
+            <span>SHA-256 Verified</span>
             <span>•</span>
-            <span>PostgreSQL 17 Native</span>
+            <span>Node.js 24 LTS Native</span>
+            <span>•</span>
+            <span>pnpm 10.5.2</span>
           </div>
         </div>
+      </div>
+
+      {/* Topographic Spatial Wireframe Horizon SVG */}
+      <div className="w-full h-24 opacity-25 overflow-hidden pointer-events-none">
+        <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1200 120">
+          <defs>
+            <linearGradient id="wireframeFade" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+            </linearGradient>
+          </defs>
+          {/* Horizontal Perspective Lines */}
+          <line x1="0" y1="20" x2="1200" y2="20" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="0" y1="45" x2="1200" y2="45" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="0" y1="75" x2="1200" y2="75" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="0" y1="110" x2="1200" y2="110" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+
+          {/* Vanishing Point Perspective Traces */}
+          <line x1="600" y1="0" x2="0" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="200" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="400" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="500" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="600" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="700" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="800" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="1000" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+          <line x1="600" y1="0" x2="1200" y2="120" stroke="url(#wireframeFade)" strokeWidth="0.8" />
+        </svg>
       </div>
     </footer>
   );

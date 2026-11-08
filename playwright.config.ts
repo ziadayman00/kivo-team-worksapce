@@ -25,7 +25,7 @@ export default defineConfig({
     {
       command: 'pnpm --filter @kivo/api start',
       url: 'http://localhost:3000/api/v1/health',
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 120000,
       env: {
         DATABASE_URL: 'postgresql://postgres:password@localhost:5432/kivo_dev',
@@ -35,7 +35,7 @@ export default defineConfig({
     {
       command: 'pnpm --filter @kivo/web dev',
       url: 'http://localhost:5173',
-      reuseExistingServer: false,
+      reuseExistingServer: !process.env.CI,
       timeout: 120000,
     },
   ],

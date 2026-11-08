@@ -1,79 +1,77 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ArrowRight, Menu, X, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Menu, X, Command } from 'lucide-react';
 
 export function Navbar() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#050507]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#050507]/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         {/* Brand */}
-        <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 font-black text-white shadow-md shadow-indigo-500/20 transition group-hover:scale-105">
-              K
+        <div className="flex items-center gap-10">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-black border border-white/[0.15] font-black text-white shadow-lg transition group-hover:border-emerald-500/50">
+              <span className="bg-gradient-to-br from-white via-zinc-200 to-emerald-400 bg-clip-text text-transparent text-sm">
+                K
+              </span>
+              <div className="absolute -inset-0.5 rounded-lg bg-gradient-to-r from-emerald-500 to-indigo-500 opacity-0 group-hover:opacity-30 blur-sm transition" />
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+              <span className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5 font-mono">
                 KIVO
-                <span className="rounded-full bg-indigo-500/10 border border-indigo-500/30 px-1.5 py-0.2 text-[9px] font-semibold text-indigo-400">
-                  v1.0
-                </span>
+                <span className="text-[10px] text-zinc-500 font-normal">OS</span>
               </span>
             </div>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-400">
-            <a href="#features" className="transition hover:text-white">
-              Features
+          {/* Monospaced Technical Nav Links */}
+          <nav className="hidden lg:flex items-center gap-7 text-[11px] font-mono tracking-tight text-zinc-400">
+            <a href="#cycles" className="transition hover:text-emerald-400">
+              <span className="text-zinc-600 mr-1">01/</span>CYCLES
             </a>
-            <a href="#bento" className="transition hover:text-white">
-              Capabilities
+            <a href="#threads" className="transition hover:text-emerald-400">
+              <span className="text-zinc-600 mr-1">02/</span>THREADS
             </a>
-            <a href="#demo" className="transition hover:text-white">
-              Interactive Demo
+            <a href="#isolation" className="transition hover:text-emerald-400">
+              <span className="text-zinc-600 mr-1">03/</span>ISOLATION
             </a>
-            <a href="#architecture" className="transition hover:text-white">
-              Architecture
+            <a href="#comparison" className="transition hover:text-emerald-400">
+              <span className="text-zinc-600 mr-1">04/</span>COMPARISON
             </a>
-            <a href="#pricing" className="transition hover:text-white">
-              Pricing
+            <a href="#pricing" className="transition hover:text-emerald-400">
+              <span className="text-zinc-600 mr-1">05/</span>PRICING
             </a>
           </nav>
         </div>
 
         {/* Action Controls */}
         <div className="hidden md:flex items-center gap-4">
-          <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.02] px-2.5 py-1 text-[11px] font-mono text-zinc-400">
-            <ShieldCheck className="h-3 w-3 text-emerald-400" />
-            <span>PostgreSQL 17 Native</span>
+          <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-zinc-900/60 px-2.5 py-1 text-[11px] font-mono text-zinc-400">
+            <Command className="h-3 w-3 text-zinc-500" />
+            <span>K</span>
+            <span className="text-zinc-600 ml-1">Quick Action</span>
           </div>
 
           {user ? (
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-indigo-600/30 transition hover:bg-indigo-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1.5 text-xs font-mono font-semibold text-emerald-400 transition hover:bg-emerald-500/20"
             >
-              <span>Launch App</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              <span>LAUNCH APP &rarr;</span>
             </Link>
           ) : (
-            <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="text-xs font-semibold text-zinc-300 transition hover:text-white"
-              >
-                Sign In
+            <div className="flex items-center gap-3 text-xs font-mono">
+              <Link to="/login" className="text-zinc-400 transition hover:text-white px-2 py-1">
+                SIGN IN
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 text-xs font-semibold text-zinc-950 shadow-md shadow-white/10 transition hover:bg-zinc-200"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-bold text-zinc-950 shadow-md shadow-white/10 transition hover:bg-zinc-200"
               >
-                <span>Get Started</span>
+                <span>GET STARTED</span>
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -94,66 +92,66 @@ export function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="border-b border-white/[0.08] bg-zinc-950 px-4 py-4 md:hidden space-y-3">
-          <nav className="flex flex-col gap-2 text-sm text-zinc-300">
+        <div className="border-b border-white/[0.08] bg-zinc-950 px-4 py-4 md:hidden space-y-3 font-mono text-xs">
+          <nav className="flex flex-col gap-2 text-zinc-400">
             <a
-              href="#features"
+              href="#section-cycles"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-white"
+              className="py-1 hover:text-emerald-400"
             >
-              Features
+              01 // CYCLES
             </a>
             <a
-              href="#bento"
+              href="#section-threads"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-white"
+              className="py-1 hover:text-emerald-400"
             >
-              Capabilities
+              02 // THREADS
             </a>
             <a
-              href="#demo"
+              href="#section-isolation"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-white"
+              className="py-1 hover:text-emerald-400"
             >
-              Interactive Demo
+              03 // ISOLATION
             </a>
             <a
               href="#architecture"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-white"
+              className="py-1 hover:text-emerald-400"
             >
-              Architecture
+              04 // ARCHITECTURE
             </a>
             <a
               href="#pricing"
               onClick={() => setMobileMenuOpen(false)}
-              className="py-1 hover:text-white"
+              className="py-1 hover:text-emerald-400"
             >
-              Pricing
+              05 // PRICING
             </a>
           </nav>
-          <div className="pt-2 border-t border-zinc-900 flex flex-col gap-2">
+
+          <div className="pt-3 border-t border-zinc-900 flex flex-col gap-2">
             {user ? (
               <Link
                 to="/dashboard"
-                className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white"
+                className="flex items-center justify-center gap-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-4 py-2 font-semibold text-emerald-400"
               >
-                <span>Launch App</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                <span>LAUNCH APP &rarr;</span>
               </Link>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-xs font-semibold text-zinc-200"
+                  className="flex items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-2 text-zinc-300"
                 >
-                  Sign In
+                  SIGN IN
                 </Link>
                 <Link
                   to="/register"
-                  className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2 text-xs font-semibold text-zinc-950"
+                  className="flex items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2 font-bold text-zinc-950"
                 >
-                  <span>Get Started Free</span>
+                  <span>GET STARTED FREE</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </>

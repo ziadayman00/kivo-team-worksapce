@@ -66,18 +66,18 @@ export function PricingSection() {
     <section id="pricing" className="py-24 bg-zinc-950 border-t border-white/[0.06]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
-          <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">
-            Simple, Transparent Pricing
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
+            TIERED RESOURCE ALLOCATION
           </span>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Invest in Team Speed.
+            Predictable Engineering Economics.
           </h2>
           <p className="mt-4 text-sm sm:text-base text-zinc-400">
-            No hidden seat minimums. No feature hostage games. Pick the plan that fits your squad.
+            No seat traps. No compute overages. Transparent infrastructure pricing for modern teams.
           </p>
 
           {/* Billing Switcher */}
-          <div className="mt-8 flex items-center justify-center gap-3 text-xs">
+          <div className="mt-8 flex items-center justify-center gap-3 text-xs font-mono">
             <span className={annual ? 'text-zinc-400' : 'font-semibold text-white'}>Monthly</span>
             <button
               type="button"
@@ -85,7 +85,7 @@ export function PricingSection() {
               className="relative inline-flex h-6 w-11 items-center rounded-full bg-zinc-800 transition focus:outline-none"
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-indigo-500 transition ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-emerald-400 transition ${
                   annual ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
@@ -103,26 +103,26 @@ export function PricingSection() {
               key={i}
               className={`rounded-2xl border p-8 flex flex-col justify-between relative transition hover:border-white/[0.2] ${
                 tier.highlight
-                  ? 'border-indigo-500/50 bg-gradient-to-b from-indigo-950/20 via-zinc-900/60 to-zinc-950 shadow-xl shadow-indigo-500/10'
+                  ? 'border-emerald-500/50 bg-gradient-to-b from-emerald-950/20 via-zinc-900/60 to-zinc-950 shadow-xl shadow-emerald-500/10'
                   : 'border-white/[0.08] bg-zinc-900/40'
               }`}
             >
               {tier.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-indigo-500/40 bg-indigo-600 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-emerald-500/40 bg-emerald-500 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black shadow-md">
                   {tier.badge}
                 </div>
               )}
 
               <div>
-                <h3 className="text-lg font-bold text-white">{tier.name}</h3>
+                <h3 className="text-lg font-bold text-white font-mono">{tier.name}</h3>
                 <p className="mt-2 text-xs text-zinc-400">{tier.description}</p>
 
                 <div className="mt-6 flex items-baseline gap-2">
-                  <span className="text-4xl font-extrabold text-white">{tier.price}</span>
+                  <span className="text-4xl font-extrabold text-white font-mono">{tier.price}</span>
                   <span className="text-xs text-zinc-400 font-mono">{tier.period}</span>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-3">
+                <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-3 font-mono">
                   {tier.features.map((feat, idx) => (
                     <div key={idx} className="flex items-center gap-2.5 text-xs text-zinc-300">
                       <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
@@ -135,9 +135,9 @@ export function PricingSection() {
               <div className="mt-8 pt-6 border-t border-white/[0.06]">
                 <Link
                   to={tier.ctaLink}
-                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold shadow-md transition ${
+                  className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold font-mono shadow-md transition ${
                     tier.highlight
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-600/30'
+                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-emerald-500/20'
                       : 'border border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 hover:text-white'
                   }`}
                 >

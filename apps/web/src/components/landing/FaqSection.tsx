@@ -45,8 +45,8 @@ export function FaqSection() {
     <section className="py-24 bg-[#050507] border-t border-white/[0.06]">
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <span className="text-xs font-mono uppercase tracking-widest text-indigo-400">
-            Frequently Asked Questions
+          <span className="text-xs font-mono uppercase tracking-widest text-emerald-400 font-bold">
+            TECHNICAL ARCHITECTURE & SPECIFICATIONS
           </span>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
             Technical Architecture FAQs

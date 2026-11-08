@@ -26,7 +26,7 @@ describe('LandingPage Component', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <AuthContext.Provider value={mockAuthContext}>
-          <MemoryRouter initialEntries={['/']}>
+          <MemoryRouter initialEntries={['/landing']}>
             <LandingPage />
           </MemoryRouter>
         </AuthContext.Provider>
@@ -40,34 +40,60 @@ describe('LandingPage Component', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: /the team operating system/i }),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('link', { name: /get started/i }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/kivo 1.0 modular monolith released/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('link', { name: /initialize workspace/i }).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/system architecture specification/i)).toBeInTheDocument();
   });
 
-  it('renders Bento Grid capabilities section', () => {
+  it('renders Numbered Showcase editorial sections (01, 02, 03)', () => {
     renderLandingPage(false);
 
-    expect(screen.getByText(/architecture meets craft/i)).toBeInTheDocument();
-    expect(screen.getByText(/cycle-driven sprint & project velocity/i)).toBeInTheDocument();
-    expect(screen.getByText(/provable tenant isolation/i)).toBeInTheDocument();
-    expect(screen.getByText(/real-time transactional outbox engine/i)).toBeInTheDocument();
+    expect(screen.getByText('01')).toBeInTheDocument();
+    expect(screen.getByText(/sprint velocity driven by provable math/i)).toBeInTheDocument();
+
+    expect(screen.getByText('02')).toBeInTheDocument();
+    expect(screen.getByText(/conversations anchored directly to code/i)).toBeInTheDocument();
+
+    expect(screen.getByText('03')).toBeInTheDocument();
+    expect(screen.getByText(/provable multi-tenant boundary isolation/i)).toBeInTheDocument();
   });
 
-  it('allows interacting with the sandbox playground tabs', () => {
+  it('renders Rhythm Shift Manifesto and boundary rules', () => {
     renderLandingPage(false);
 
-    // Initial state shows Live Sprint Board
-    expect(screen.getByText(/interactive cycle board/i)).toBeInTheDocument();
+    expect(screen.getByText(/the way teams build software is fractured/i)).toBeInTheDocument();
+    expect(screen.getByText(/kivo strictly bounded monolith/i)).toBeInTheDocument();
+    expect(screen.getByText(/no cross-module internals/i)).toBeInTheDocument();
+    expect(screen.getByText(/no cross-persistence access/i)).toBeInTheDocument();
+  });
 
-    // Switch to contextual thread
-    const threadTab = screen.getByRole('button', { name: /2. contextual thread/i });
-    fireEvent.click(threadTab);
-    expect(screen.getByText(/anchored thread: ticket #kiv-101/i)).toBeInTheDocument();
+  it('renders Telemetry Ticker and metrics', () => {
+    renderLandingPage(false);
 
-    // Switch to tenant switcher
-    const tenantTab = screen.getByRole('button', { name: /3. tenant context switcher/i });
-    fireEvent.click(tenantTab);
-    expect(screen.getByText(/zero-latency tenant switcher/i)).toBeInTheDocument();
+    expect(screen.getByText(/system telemetry & verification/i)).toBeInTheDocument();
+    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(screen.getByText('38/38')).toBeInTheDocument();
+  });
+
+  it('renders Comparison Matrix and ROI Calculator', () => {
+    renderLandingPage(false);
+
+    expect(screen.getByText(/stop paying the fragmentation tax/i)).toBeInTheDocument();
+    expect(screen.getByText(/calculate your team's reclaimed velocity/i)).toBeInTheDocument();
+  });
+
+  it('allows switching files and running boundary verification in Code Studio', () => {
+    renderLandingPage(false);
+
+    expect(screen.getByText(/inspect the concrete engineering/i)).toBeInTheDocument();
+    const serviceTab = screen.getByRole('button', { name: /workspace\.service\.ts/i });
+    fireEvent.click(serviceTab);
+
+    expect(screen.getByText(/acceptinvitation/i)).toBeInTheDocument();
+
+    const verifyBtn = screen.getByRole('button', { name: /verify boundaries/i });
+    fireEvent.click(verifyBtn);
   });
 
   it('expands FAQ accordion item on click', () => {
