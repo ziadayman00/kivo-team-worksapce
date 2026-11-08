@@ -1,11 +1,21 @@
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
 import App from './App';
 
 describe('App', () => {
-  it('renders KIVO heading and initialized status', () => {
+  it('renders login screen when user session is not authenticated', async () => {
+    // Mock fetch for /api/v1/auth/me to return 401 unauthorized
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+      json: async () => ({ message: 'Unauthorized' }),
+    } as Response);
+
     render(<App />);
-    expect(screen.getByRole('heading', { name: /kivo/i, level: 1 })).toBeInTheDocument();
-    expect(screen.getByTestId('app-status')).toHaveTextContent('Status: Initialized');
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /sign in to kivo/i })).toBeInTheDocument();
+    });
   });
 });

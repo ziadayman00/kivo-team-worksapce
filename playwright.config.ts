@@ -23,15 +23,19 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter @kivo/api dev',
+      command: 'pnpm --filter @kivo/api start',
       url: 'http://localhost:3000/api/v1/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120000,
+      env: {
+        DATABASE_URL: 'postgresql://postgres:password@localhost:5432/kivo_dev',
+        DATABASE_URL_TEST: 'postgresql://postgres:password@localhost:5432/kivo_test',
+      },
     },
     {
       command: 'pnpm --filter @kivo/web dev',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       timeout: 120000,
     },
   ],

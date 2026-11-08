@@ -2,16 +2,13 @@ import { test, expect } from '@playwright/test';
 
 test.describe('KIVO System E2E Smoke Tests', () => {
   test('web application entrypoint renders successfully', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/login');
 
     // Verify page title and brand heading
     await expect(page).toHaveTitle(/KIVO/i);
-    const heading = page.getByRole('heading', { level: 1, name: 'KIVO' });
+    const heading = page.getByRole('heading', { level: 1, name: /sign in to kivo/i });
     await expect(heading).toBeVisible();
-
-    // Verify application foundation initialized
-    const statusText = page.getByTestId('app-status');
-    await expect(statusText).toHaveText('Status: Initialized');
+    await expect(page.getByLabel(/email address/i)).toBeVisible();
   });
 
   test('backend API health check responds and proxies correctly', async ({ request }) => {

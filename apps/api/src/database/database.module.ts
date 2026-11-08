@@ -14,7 +14,12 @@ export type Database = NodePgDatabase<typeof schema>;
       provide: PG_POOL,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const connectionString = configService.get<string>('DATABASE_URL');
+        const nodeEnv = configService.get<string>('NODE_ENV');
+        const connectionString =
+          nodeEnv === 'test'
+            ? configService.get<string>('DATABASE_URL_TEST') ||
+              configService.get<string>('DATABASE_URL')
+            : configService.get<string>('DATABASE_URL');
         return new Pool({
           connectionString,
           max: 20,
