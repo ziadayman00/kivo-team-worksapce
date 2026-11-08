@@ -1,0 +1,27 @@
+{
+  "name": "kivo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KIVO — Team Operating System",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@10.5.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "build": "pnpm --recursive run build",
+    "dev": "pnpm --parallel run dev",
+    "lint": "pnpm --recursive run lint",
+    "test": "pnpm --recursive run test",
+    "typecheck": "pnpm --recursive run typecheck"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  }
+}

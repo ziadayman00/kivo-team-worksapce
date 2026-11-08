@@ -1,0 +1,16 @@
+{
+  "name": "@kivo/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generated API client contract for KIVO",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@kivo/tsconfig": "workspace:*",
+    "typescript": "^5.8.2"
+  }
+}

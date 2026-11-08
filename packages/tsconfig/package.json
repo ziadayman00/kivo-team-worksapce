@@ -1,0 +1,11 @@
+{
+  "name": "@kivo/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared TypeScript configurations for KIVO",
+  "files": [
+    "base.json",
+    "node.json",
+    "react.json"
+  ]
+}
