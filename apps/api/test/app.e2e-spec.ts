@@ -27,6 +27,7 @@ describe('AppController (e2e smoke test)', () => {
       .expect((res) => {
         expect(res.body.status).toBe('ok');
         expect(res.body.service).toBe('kivo-api');
+        expect(res.body.database).toBe('connected');
       });
   });
 });
