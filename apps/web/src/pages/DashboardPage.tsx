@@ -1,10 +1,21 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, User, ShieldCheck } from 'lucide-react';
+import { apiClient } from '../lib/api';
+import { LogOut, User, ShieldCheck, Plus, Building2, ChevronRight } from 'lucide-react';
 
 export function DashboardPage() {
   const { user, logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const { data: workspaces, isLoading: isLoadingWorkspaces } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: async () => {
+      const res = await apiClient.workspaces.list();
+      return res.data?.workspaces ?? [];
+    },
+  });
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -61,6 +72,71 @@ export function DashboardPage() {
             <p data-testid="app-status" className="mt-2 text-sm text-zinc-400">
               Status: Initialized
             </p>
+          </div>
+
+          {/* Workspaces Section */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Building2 className="h-5 w-5 text-indigo-400" />
+                <h3 className="text-base font-semibold text-white">Your Workspaces</h3>
+              </div>
+              <Link
+                to="/create-workspace"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:bg-indigo-500"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Create Workspace</span>
+              </Link>
+            </div>
+
+            <div className="mt-4">
+              {isLoadingWorkspaces ? (
+                <div className="flex items-center gap-2 py-4 text-xs text-zinc-500">
+                  <div className="h-4 w-4 animate-spin rounded-full border border-zinc-700 border-t-zinc-400" />
+                  <span>Loading workspaces...</span>
+                </div>
+              ) : !workspaces || workspaces.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-zinc-800 p-8 text-center">
+                  <Building2 className="mx-auto h-8 w-8 text-zinc-600" />
+                  <p className="mt-2 text-sm font-medium text-zinc-300">No workspaces yet</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    Create a workspace to start organizing projects and collaborating with your
+                    team.
+                  </p>
+                  <Link
+                    to="/create-workspace"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>Create your first workspace</span>
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {workspaces.map((ws) => (
+                    <Link
+                      key={ws.id}
+                      to={`/workspaces/${ws.slug}`}
+                      className="group flex items-center justify-between rounded-lg border border-zinc-800/80 bg-zinc-950 p-4 transition hover:border-zinc-700 hover:bg-zinc-900/60"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-zinc-100 group-hover:text-indigo-400">
+                            {ws.name}
+                          </span>
+                          <span className="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-medium uppercase text-indigo-400 border border-indigo-500/20">
+                            {ws.role}
+                          </span>
+                        </div>
+                        <p className="font-mono text-xs text-zinc-500">/{ws.slug}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-zinc-600 transition group-hover:translate-x-0.5 group-hover:text-zinc-300" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* User Account Info Card */}

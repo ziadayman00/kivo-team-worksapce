@@ -6,6 +6,8 @@ import { PublicOnlyRoute } from './components/PublicOnlyRoute';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { CreateWorkspacePage } from './pages/CreateWorkspacePage';
+import { WorkspaceViewPage } from './pages/WorkspaceViewPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,6 +33,8 @@ export function App() {
             {/* Protected routes (redirect to login if unauthenticated) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/create-workspace" element={<CreateWorkspacePage />} />
+              <Route path="/workspaces/:workspaceSlug" element={<WorkspaceViewPage />} />
             </Route>
 
             {/* Fallback */}

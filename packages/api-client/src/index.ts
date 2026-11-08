@@ -36,6 +36,25 @@ export interface AuthResponseData {
   expiresAt?: string;
 }
 
+export interface WorkspaceDto {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  role: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateWorkspaceInput {
+  name: string;
+  slug?: string;
+}
+
+export interface UpdateWorkspaceInput {
+  name?: string;
+}
+
 export interface ApiResponse<T = unknown> {
   status: 'success' | 'error';
   data?: T;
@@ -108,6 +127,32 @@ export function createApiClient(config: ApiClientConfig = {}) {
         request<ApiResponse<{ account: AccountDto }>>('/api/v1/auth/me', {
           method: 'GET',
         }),
+    },
+    workspaces: {
+      create: (input: CreateWorkspaceInput) =>
+        request<ApiResponse<{ workspace: WorkspaceDto }>>('/api/v1/workspaces', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+      list: () =>
+        request<ApiResponse<{ workspaces: WorkspaceDto[] }>>('/api/v1/workspaces', {
+          method: 'GET',
+        }),
+      getBySlug: (slug: string) =>
+        request<ApiResponse<{ workspace: WorkspaceDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}`,
+          {
+            method: 'GET',
+          },
+        ),
+      update: (slug: string, input: UpdateWorkspaceInput) =>
+        request<ApiResponse<{ workspace: WorkspaceDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}`,
+          {
+            method: 'PATCH',
+            body: JSON.stringify(input),
+          },
+        ),
     },
   };
 }
