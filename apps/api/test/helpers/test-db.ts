@@ -46,8 +46,11 @@ export async function cleanTestDatabase(): Promise<void> {
 
 export async function closeTestDatabase(): Promise<void> {
   if (testPool) {
-    await testPool.end();
+    const pool = testPool;
     testPool = null;
     testDb = null;
+    if (!(pool as any).ending && !(pool as any).ended) {
+      await pool.end();
+    }
   }
 }
