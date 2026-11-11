@@ -445,4 +445,108 @@ describe('PostgreSQL Integration: Workspace Creation & Profile Management (ZIA-2
         .expect(403);
     });
   });
+
+  describe('GET /api/v1/workspaces/:slug/bootstrap (ZIA-26 / M1-05)', () => {
+    it('returns workspace bootstrap payload with verified membership, counts and accessible workspaces', async () => {
+      // 1. User A creates 2 workspaces
+      await request(app.getHttpServer())
+        .post('/api/v1/workspaces')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ name: 'Alpha Squad', slug: 'alpha-squad' })
+        .expect(201);
+
+      await request(app.getHttpServer())
+        .post('/api/v1/workspaces')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ name: 'Beta Lab', slug: 'beta-lab' })
+        .expect(201);
+
+      // 2. Bootstrap alpha-squad
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/alpha-squad/bootstrap')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(200);
+
+      expect(res.body.status).toBe('success');
+      const { bootstrap } = res.body.data;
+      expect(bootstrap.workspace.slug).toBe('alpha-squad');
+      expect(bootstrap.membership.role).toBe('OWNER');
+      expect(bootstrap.membership.status).toBe('ACTIVE');
+      expect(bootstrap.counts.memberCount).toBe(1);
+      expect(bootstrap.counts.pendingInviteCount).toBe(0);
+      expect(bootstrap.accessibleWorkspaces).toHaveLength(2);
+      expect(bootstrap.accessibleWorkspaces.map((w: { slug: string }) => w.slug)).toContain(
+        'alpha-squad',
+      );
+      expect(bootstrap.accessibleWorkspaces.map((w: { slug: string }) => w.slug)).toContain(
+        'beta-lab',
+      );
+    });
+
+    it('denies bootstrap with 403 Forbidden if user is not a member', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/workspaces')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ name: 'Secret Vault', slug: 'secret-vault' })
+        .expect(201);
+
+      // User B attempts to bootstrap Secret Vault
+      await request(app.getHttpServer())
+        .get('/api/v1/workspaces/secret-vault/bootstrap')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(403);
+    });
+
+    it('denies bootstrap with 403 Forbidden if member is SUSPENDED', async () => {
+      // 1. User A creates workspace
+      await request(app.getHttpServer())
+        .post('/api/v1/workspaces')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ name: 'Delta Squad', slug: 'delta-squad' })
+        .expect(201);
+
+      // 2. User A invites User B
+      const invRes = await request(app.getHttpServer())
+        .post('/api/v1/workspaces/delta-squad/invitations')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ email: 'user-b@kivo.test', role: 'MEMBER' })
+        .expect(201);
+
+      const token = invRes.body.data.invitation.token;
+
+      // 3. User B accepts
+      await request(app.getHttpServer())
+        .post(`/api/v1/invitations/${token}/accept`)
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      // 4. Verify User B can bootstrap
+      await request(app.getHttpServer())
+        .get('/api/v1/workspaces/delta-squad/bootstrap')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(200);
+
+      // 5. User A suspends User B
+      const membersRes = await request(app.getHttpServer())
+        .get('/api/v1/workspaces/delta-squad/members')
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .expect(200);
+
+      const memberB = membersRes.body.data.members.find(
+        (m: { email: string }) => m.email === 'user-b@kivo.test',
+      );
+
+      await request(app.getHttpServer())
+        .patch(`/api/v1/workspaces/delta-squad/members/${memberB.id}`)
+        .set('Cookie', [`kivo_session=${userAToken}`])
+        .send({ status: 'SUSPENDED' })
+        .expect(200);
+
+      // 6. User B now receives 403 Forbidden
+      await request(app.getHttpServer())
+        .get('/api/v1/workspaces/delta-squad/bootstrap')
+        .set('Cookie', [`kivo_session=${userBToken}`])
+        .expect(403);
+    });
+  });
 });

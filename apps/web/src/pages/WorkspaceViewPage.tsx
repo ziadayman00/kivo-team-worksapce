@@ -3,9 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { ApiError, WorkspaceMemberDto, WorkspaceInvitationDto } from '@kivo/api-client';
+import { WorkspaceSwitcher } from '../components/workspace/WorkspaceSwitcher';
 import {
   ArrowLeft,
-  Building,
   ShieldCheck,
   Check,
   Settings,
@@ -47,6 +47,15 @@ export function WorkspaceViewPage() {
       return res.data?.workspace;
     },
     retry: false,
+  });
+
+  // 1b. Fetch all accessible workspaces for the switcher
+  const { data: accessibleWorkspaces = [] } = useQuery({
+    queryKey: ['workspaces'],
+    queryFn: async () => {
+      const res = await apiClient.workspaces.list();
+      return res.data?.workspaces ?? [];
+    },
   });
 
   // 2. Fetch workspace members
@@ -277,10 +286,23 @@ export function WorkspaceViewPage() {
             </Link>
 
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-md shadow-indigo-500/20">
-                <Building className="h-5 w-5" />
-              </div>
-              <div>
+              <WorkspaceSwitcher
+                currentWorkspaceSlug={workspace.slug}
+                accessibleWorkspaces={
+                  accessibleWorkspaces.length > 0
+                    ? accessibleWorkspaces
+                    : [
+                        {
+                          id: workspace.id,
+                          name: workspace.name,
+                          slug: workspace.slug,
+                          role: workspace.role,
+                        },
+                      ]
+                }
+                currentRole={workspace.role}
+              />
+              <div className="hidden sm:block">
                 <h1 className="text-base font-bold tracking-tight text-white">{workspace.name}</h1>
                 <p className="font-mono text-xs text-zinc-400">/{workspace.slug}</p>
               </div>

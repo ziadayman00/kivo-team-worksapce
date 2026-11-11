@@ -365,4 +365,79 @@ describe('WorkspaceService', () => {
       ).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('bootstrapWorkspace', () => {
+    it('throws NotFoundException if workspace slug does not exist', async () => {
+      mockDb.limit.mockResolvedValueOnce([]); // no workspace
+
+      await expect(service.bootstrapWorkspace('usr_1', 'non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws ForbiddenException if account is not a member or is suspended', async () => {
+      mockDb.limit
+        .mockResolvedValueOnce([{ id: 'ws_1', name: 'Acme', slug: 'acme', status: 'ACTIVE' }]) // workspace found
+        .mockResolvedValueOnce([{ role: 'MEMBER', status: 'SUSPENDED' }]); // suspended membership
+
+      await expect(service.bootstrapWorkspace('usr_1', 'acme')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('returns workspace bootstrap payload with counts and accessible workspaces', async () => {
+      const now = new Date();
+      const fakeWorkspace = {
+        id: 'ws_1',
+        name: 'Acme Corp',
+        slug: 'acme-corp',
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now,
+      };
+      const fakeMembership = {
+        role: 'OWNER',
+        status: 'ACTIVE',
+        createdAt: now,
+      };
+
+      mockDb.limit
+        .mockResolvedValueOnce([fakeWorkspace]) // workspace
+        .mockResolvedValueOnce([fakeMembership]); // membership
+
+      // counts
+      mockDb.where
+        .mockReturnValueOnce(mockDb) // limit calls
+        .mockReturnValueOnce(mockDb)
+        .mockResolvedValueOnce([{ total: 3 }]) // member count
+        .mockResolvedValueOnce([{ total: 1 }]); // pending invite count
+
+      jest.spyOn(service, 'listUserWorkspaces').mockResolvedValueOnce([
+        {
+          id: 'ws_1',
+          name: 'Acme Corp',
+          slug: 'acme-corp',
+          status: 'ACTIVE',
+          role: 'OWNER',
+          createdAt: now,
+          updatedAt: now,
+        },
+        {
+          id: 'ws_2',
+          name: 'Beta Labs',
+          slug: 'beta-labs',
+          status: 'ACTIVE',
+          role: 'MEMBER',
+          createdAt: now,
+          updatedAt: now,
+        },
+      ]);
+
+      const result = await service.bootstrapWorkspace('usr_1', 'acme-corp');
+
+      expect(result.workspace.slug).toBe('acme-corp');
+      expect(result.membership.role).toBe('OWNER');
+      expect(result.membership.status).toBe('ACTIVE');
+      expect(result.accessibleWorkspaces).toHaveLength(2);
+      expect(result.accessibleWorkspaces[0]?.name).toBe('Acme Corp');
+    });
+  });
 });

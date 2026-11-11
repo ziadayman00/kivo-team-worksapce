@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { apiClient } from '../lib/api';
+import { WorkspaceSwitcher } from '../components/workspace/WorkspaceSwitcher';
 import { LogOut, User, ShieldCheck, Plus, Building2, ChevronRight } from 'lucide-react';
 
 export function DashboardPage() {
@@ -42,6 +43,10 @@ export function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
+            {workspaces && workspaces.length > 0 && (
+              <WorkspaceSwitcher accessibleWorkspaces={workspaces} />
+            )}
+
             <div className="flex items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-300">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600/30 text-indigo-400 font-semibold uppercase">
                 {user?.displayName ? user.displayName.charAt(0) : 'U'}

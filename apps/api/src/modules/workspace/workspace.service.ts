@@ -7,7 +7,7 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, count } from 'drizzle-orm';
 import * as crypto from 'node:crypto';
 import { DATABASE_CONNECTION } from '../../database/database.constants';
 import { Database } from '../../database/database.module';
@@ -31,6 +31,32 @@ export interface WorkspaceWithMembership {
   role: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface WorkspaceBootstrapResponse {
+  workspace: {
+    id: string;
+    name: string;
+    slug: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  membership: {
+    role: string;
+    status: string;
+    joinedAt: Date;
+  };
+  counts: {
+    memberCount: number;
+    pendingInviteCount: number;
+  };
+  accessibleWorkspaces: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+  }>;
 }
 
 export interface CreateInvitationInput {
@@ -244,6 +270,93 @@ export class WorkspaceService {
       role: membership.role,
       createdAt: workspace.createdAt,
       updatedAt: workspace.updatedAt,
+    };
+  }
+
+  /**
+   * Bootstraps workspace context for client initialization in a single round-trip.
+   * Enforces that the calling account has an ACTIVE membership in the workspace.
+   */
+  async bootstrapWorkspace(accountId: string, slug: string): Promise<WorkspaceBootstrapResponse> {
+    const normalizedSlug = slug.trim().toLowerCase();
+
+    // 1. Fetch workspace
+    const [workspace] = await this.db
+      .select()
+      .from(schema.workspaces)
+      .where(
+        and(eq(schema.workspaces.slug, normalizedSlug), eq(schema.workspaces.status, 'ACTIVE')),
+      )
+      .limit(1);
+
+    if (!workspace) {
+      throw new NotFoundException(`Workspace "${normalizedSlug}" not found.`);
+    }
+
+    // 2. Fetch active membership
+    const [membership] = await this.db
+      .select()
+      .from(schema.workspaceMemberships)
+      .where(
+        and(
+          eq(schema.workspaceMemberships.workspaceId, workspace.id),
+          eq(schema.workspaceMemberships.accountId, accountId),
+        ),
+      )
+      .limit(1);
+
+    if (!membership || membership.status !== 'ACTIVE') {
+      throw new ForbiddenException('You do not have active access to this workspace.');
+    }
+
+    // 3. Fetch counts in parallel
+    const [memberCountRes] = await this.db
+      .select({ total: count() })
+      .from(schema.workspaceMemberships)
+      .where(
+        and(
+          eq(schema.workspaceMemberships.workspaceId, workspace.id),
+          eq(schema.workspaceMemberships.status, 'ACTIVE'),
+        ),
+      );
+
+    const [pendingInviteCountRes] = await this.db
+      .select({ total: count() })
+      .from(schema.workspaceInvitations)
+      .where(
+        and(
+          eq(schema.workspaceInvitations.workspaceId, workspace.id),
+          eq(schema.workspaceInvitations.status, 'PENDING'),
+        ),
+      );
+
+    // 4. Fetch all active accessible workspaces for this account
+    const accessibleWorkspaces = await this.listUserWorkspaces(accountId);
+
+    return {
+      workspace: {
+        id: workspace.id,
+        name: workspace.name,
+        slug: workspace.slug,
+        status: workspace.status,
+        createdAt: workspace.createdAt,
+        updatedAt: workspace.updatedAt,
+      },
+      membership: {
+        role: membership.role,
+        status: membership.status,
+        joinedAt: membership.createdAt,
+      },
+      counts: {
+        memberCount: Number(memberCountRes?.total ?? 0),
+        pendingInviteCount: Number(pendingInviteCountRes?.total ?? 0),
+      },
+      accessibleWorkspaces: accessibleWorkspaces.map((w) => ({
+        id: w.id,
+        name: w.name,
+        slug: w.slug,
+        role: w.role,
+      })),
     };
   }
 

@@ -141,4 +141,69 @@ test.describe('KIVO Workspace Creation, Profile & Slug Routing (ZIA-25 / M1-04)'
     await expect(page.getByRole('alert')).toBeVisible();
     await expect(page.getByRole('alert')).toContainText(/do not have access|permission/i);
   });
+
+  test('workspace bootstrap & multi-workspace switching via WorkspaceSwitcher (ZIA-26 / M1-05)', async ({
+    page,
+  }) => {
+    const switchId = Date.now();
+    const switchUser = {
+      displayName: `Switcher ${switchId}`,
+      email: `switch.${switchId}@kivo.test`,
+      password: 'Password123!',
+    };
+    const ws1 = {
+      name: `Prime Systems ${switchId}`,
+      slug: `prime-systems-${switchId}`,
+    };
+    const ws2 = {
+      name: `Apex Labs ${switchId}`,
+      slug: `apex-labs-${switchId}`,
+    };
+
+    // 1. Register user
+    await page.goto('/register');
+    await page.getByLabel(/full name/i).fill(switchUser.displayName);
+    await page.getByLabel(/email address/i).fill(switchUser.email);
+    await page.getByLabel(/^password/i).fill(switchUser.password);
+    await page.getByLabel(/confirm password/i).fill(switchUser.password);
+    await page.getByRole('button', { name: /create account/i }).click();
+    await expect(page).toHaveURL('/');
+
+    // 2. Create Workspace 1
+    await page
+      .getByRole('link', { name: /create workspace/i })
+      .first()
+      .click();
+    await page.getByLabel(/workspace name/i).fill(ws1.name);
+    await page.getByRole('button', { name: /customize slug/i }).click();
+    await page.getByLabel(/workspace url slug/i).fill(ws1.slug);
+    await page.getByRole('button', { name: /^create workspace$/i }).click();
+    await expect(page).toHaveURL(`/workspaces/${ws1.slug}`);
+
+    // 3. Create Workspace 2
+    await page.goto('/create-workspace');
+    await page.getByLabel(/workspace name/i).fill(ws2.name);
+    await page.getByRole('button', { name: /customize slug/i }).click();
+    await page.getByLabel(/workspace url slug/i).fill(ws2.slug);
+    await page.getByRole('button', { name: /^create workspace$/i }).click();
+    await expect(page).toHaveURL(`/workspaces/${ws2.slug}`);
+
+    // 4. In Workspace 2, open WorkspaceSwitcher
+    const switcherBtn = page.getByRole('button', { name: /switch workspace/i });
+    await expect(switcherBtn).toBeVisible();
+    await switcherBtn.click();
+
+    // 5. Verify both workspaces are visible in dropdown
+    await expect(page.getByText('Accessible Workspaces')).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: new RegExp(ws1.name, 'i') })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: new RegExp(ws2.name, 'i') })).toBeVisible();
+
+    // 6. Click Workspace 1 to switch
+    await page.getByRole('menuitem', { name: new RegExp(ws1.name, 'i') }).click();
+
+    // 7. Verify navigation and header updates
+    await expect(page).toHaveURL(`/workspaces/${ws1.slug}`);
+    await expect(page.getByRole('heading', { level: 1, name: ws1.name })).toBeVisible();
+    await expect(page.getByText(`/${ws1.slug}`)).toBeVisible();
+  });
 });

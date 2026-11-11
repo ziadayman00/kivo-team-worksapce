@@ -91,6 +91,16 @@ export class WorkspaceController {
     };
   }
 
+  @Get(':slug/bootstrap')
+  @HttpCode(HttpStatus.OK)
+  async bootstrapWorkspace(@Param('slug') slug: string, @Req() req: AuthenticatedRequest) {
+    const bootstrap = await this.workspaceService.bootstrapWorkspace(req.user.id, slug);
+    return {
+      status: 'success',
+      data: { bootstrap },
+    };
+  }
+
   @Patch(':slug')
   @HttpCode(HttpStatus.OK)
   async updateWorkspace(

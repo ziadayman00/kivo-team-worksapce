@@ -55,6 +55,25 @@ export interface UpdateWorkspaceInput {
   name?: string;
 }
 
+export interface WorkspaceBootstrapDto {
+  workspace: WorkspaceDto;
+  membership: {
+    role: string;
+    status: string;
+    joinedAt: string;
+  };
+  counts: {
+    memberCount: number;
+    pendingInviteCount: number;
+  };
+  accessibleWorkspaces: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    role: string;
+  }>;
+}
+
 export interface WorkspaceInvitationDto {
   id: string;
   email: string;
@@ -185,6 +204,13 @@ export function createApiClient(config: ApiClientConfig = {}) {
       getBySlug: (slug: string) =>
         request<ApiResponse<{ workspace: WorkspaceDto }>>(
           `/api/v1/workspaces/${encodeURIComponent(slug)}`,
+          {
+            method: 'GET',
+          },
+        ),
+      bootstrap: (slug: string) =>
+        request<ApiResponse<{ bootstrap: WorkspaceBootstrapDto }>>(
+          `/api/v1/workspaces/${encodeURIComponent(slug)}/bootstrap`,
           {
             method: 'GET',
           },
